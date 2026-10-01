@@ -22,8 +22,8 @@ Node.js 20 이상이 필요합니다.
 
 ```bash
 # 1. 저장소 내려받기
-git clone https://github.com/Taegun41/<저장소이름>.git
-cd <저장소이름>/diary-server
+git clone https://github.com/Taegun41/Univ-diary.git
+cd Univ-diary/diary-server
 
 # 2. 패키지 설치 (Puppeteer가 크롬을 함께 내려받아 몇 분 걸릴 수 있습니다)
 npm install
