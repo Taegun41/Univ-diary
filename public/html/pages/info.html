@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학식 정보</title>
+  <link rel="stylesheet" href="/css/info.css" />
+</head>
+<body>
+    <h1>오늘의 학식 메뉴</h1>
+
+    <label for="buildingSelect">건물 선택:</label>
+    <select id="buildingSelect">
+        <option value="Geumjeong">금정회관</option>
+        <option value="Geumjeong-scholor">금정회관 교직원식당</option>
+        <option value="MunChang" selected>문창회관</option>
+        <option value="Haksaeng">학생회관</option>
+    </select>
+    <button id="select" onclick="Explore()">조회</button>
+    
+    <table id="mealTable">
+        <thead>
+        <tr>
+            <th>시간</th>
+            <th>정식</th>
+            <th>일식</th>
+        </tr>
+        </thead>
+        <tbody id="output">
+        </tbody>
+    </table>
+    <div class="Academic-name">
+        <h1>학사일정</h1>
+    </div><br>
+    <div class="Academic-calender">
+        <div class="day" id="day">
+            <div id="date-month"></div>
+            <div id="date-year"></div>
+        </div>
+        <div class="schedule" id="schedule">일정</div>
+    </div>
+    <script src="/js/info.js"></script>
+</body>
+</html>

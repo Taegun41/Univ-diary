@@ -1,0 +1,25 @@
+{
+  "name": "week_project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "schedule": "node schedule-scraper.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "부산대학교 학생용 다이어리 웹앱",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "axios-cookiejar-support": "^6.0.2",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "puppeteer": "^24.9.0",
+    "qs": "^6.14.0",
+    "tough-cookie": "^5.1.2"
+  }
+}

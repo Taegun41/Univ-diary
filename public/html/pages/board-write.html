@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>새 글 작성</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #fffaf5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background-color: #fdf2e9;
+      border: 2px solid #f0cfa5;
+      border-radius: 16px;
+      padding: 30px 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #5a3e2b;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 18px;
+      font-weight: bold;
+      color: #4e342e;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d8bfa6;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+      background-color: #fffdf9;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .button-group button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s;
+    }
+
+    .submit-btn {
+      background-color: #d7a86e;
+      color: white;
+    }
+
+    .submit-btn:hover {
+      background-color: #c78f54;
+    }
+
+    .cancel-btn {
+      background-color: #ddd;
+      color: #333;
+    }
+
+    .cancel-btn:hover {
+      background-color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>게시글 작성</h2>
+    <form action="/board/write" method="POST">
+      <label>
+        제목:
+        <input type="text" name="title" required>
+      </label>
+      <label>
+        내용:
+        <textarea name="content" rows="10" required></textarea>
+      </label>
+      <div class="button-group">
+        <button type="submit" class="submit-btn">확인</button>
+        <button type="button" class="cancel-btn" onclick="location.href='/html/pages/board.html'">취소</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

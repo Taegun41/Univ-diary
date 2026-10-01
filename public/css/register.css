@@ -1,0 +1,56 @@
+
+
+  body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F7F9FD;
+}
+
+.register-container {
+  background-color: white;
+  border-radius: 15px;
+  padding: 60px 40px;  /* 세로 padding 두 배로 증가 */
+  width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  justify-content: center;
+  height: 500px;
+}
+
+.register-container h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.register-container input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.register-container button {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  background-color: #3f72af;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-container button:hover {
+  background-color: #365f95;
+
+}

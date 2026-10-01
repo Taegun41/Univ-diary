@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>대학 다이어리 - 일정 캘린더</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { margin: 0; display: flex; flex-direction: row; height: 100vh; }
+    #calendar-container { width: 30%; min-width: 250px; padding: 20px; border-right: 1px solid #ccc; }
+    #calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    #calendar-nav button { padding: 5px 10px; font-size: 14px; cursor: pointer; }
+    #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .calendar-day { padding: 10px; text-align: center; cursor: pointer; border-radius: 8px; position: relative; }
+    .calendar-day:hover { background-color: #f0f0f0; }
+    .selected { background-color: #008cff; color: white; }
+    .has-event::after { content: "•"; color: red; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 18px; }
+    .sunday { color: red; }
+    .saturday { color: blue; }
+    #schedule-container { flex: 1; padding: 20px; overflow-y: auto; }
+    h2 { margin-top: 0; }
+    .hour-block { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .hour-label { font-weight: bold; margin-bottom: 4px; }
+    .hour-input { width: 100%; border: none; outline: none; font-size: 14px; background-color: transparent; resize: none; overflow: hidden; min-height: 24px; }
+    .hour-input:focus { background-color: #f8f8f8; }
+    #saveScheduleBtn { margin-top: 10px; padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    #saveScheduleBtn:hover { background-color: #0056b3; }
+    @media (max-width: 1000px) {
+      body { flex-direction: column; }
+      #calendar-container { width: 100%; border-right: none; border-bottom: 1px solid #ccc; }
+      #schedule-container { width: 100%; }
+      #title-and-save {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #selected-date-title {
+      margin: 0;
+    }
+
+    #saveScheduleBtn {
+      padding: 8px 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #saveScheduleBtn:hover {
+      background-color: #0056b3;
+    }
+    }
+  </style>
+</head>
+<body>
+  <div id="calendar-container">
+    <div id="calendar-nav">
+      <button id="prev-month">&lt;</button>
+      <h2 id="calendar-title"></h2>
+      <button id="next-month">&gt;</button>
+    </div>
+    <div id="calendar"></div>
+  </div>
+
+  <div id="schedule-container">
+    <div id="title-and-save">
+      <h2 id="selected-date-title"></h2>
+      <button id="saveScheduleBtn">변경 사항 저장</button>
+    </div>
+    <div id="schedule"></div>
+  </div>
+
+  <script>
+    const calendar = document.getElementById("calendar");
+    const calendarTitle = document.getElementById("calendar-title");
+    const selectedDateTitle = document.getElementById("selected-date-title");
+    const schedule = document.getElementById("schedule");
+    const prevBtn = document.getElementById("prev-month");
+    const nextBtn = document.getElementById("next-month");
+    const saveBtn = document.getElementById("saveScheduleBtn");
+
+    const now = new Date();
+    let selectedDate = new Date(now);
+    let currentCalendarDate = new Date(now);
+    let currentUser = null;
+    let events = {};
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      currentUser = await getUserInfo();
+      if (!currentUser) return alert("로그인 후 사용해주세요.");
+
+      try {
+        const res = await fetch(`/schedule?user=${currentUser}`);
+        if (!res.ok) throw new Error("불러오기 실패");
+        events = await res.json();
+        renderCalendar(currentCalendarDate);
+        renderSchedule(selectedDate);
+      } catch (e) {
+        console.error("일정 데이터 불러오기 오류:", e);
+      }
+    });
+
+    prevBtn.addEventListener("click", () => {
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+      renderCalendar(currentCalendarDate);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+      renderCalendar(currentCalendarDate);
+    });
+
+    saveBtn.addEventListener("click", () => {
+      if (!currentUser || !selectedDate) {
+        alert("저장할 날짜가 없습니다.");
+        return;
+      }
+
+      const key = selectedDate.toISOString().split("T")[0];
+      fetch("/schedule/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user: currentUser,
+          date: key,
+          schedule: events[key] || {},
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("저장 실패");
+          return res.text();
+        })
+        .then((msg) => alert(msg || "저장 완료!"))
+        .catch((err) => {
+          console.error("저장 중 오류:", err);
+          alert("저장 중 오류 발생!");
+        });
+    });
+
+    async function getUserInfo() {
+      try {
+        const response = await fetch('/user-info');
+        const data = await response.json();
+        if (data.loggedIn) return data.username;
+        return null;
+      } catch (error) {
+        console.error("사용자 정보 오류:", error);
+        return null;
+      }
+    }
+
+    function renderCalendar(date) {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      calendarTitle.textContent = `${year}년 ${month + 1}월`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      calendar.innerHTML = "";
+
+      const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+      weekdays.forEach(day => {
+        const el = document.createElement("div");
+        el.textContent = day;
+        el.style.fontWeight = "bold";
+        el.style.textAlign = "center";
+        calendar.appendChild(el);
+      });
+
+      for (let i = 0; i < firstDay; i++) {
+        calendar.appendChild(document.createElement("div"));
+      }
+
+      for (let i = 1; i <= lastDate; i++) {
+        const thisDate = new Date(year, month, i);
+        const key = thisDate.toISOString().split("T")[0];
+        const el = document.createElement("div");
+        el.className = "calendar-day";
+        if (thisDate.toDateString() === selectedDate.toDateString()) el.classList.add("selected");
+
+        const dayOfWeek = thisDate.getDay();
+        if (dayOfWeek === 0) el.classList.add("sunday");
+        else if (dayOfWeek === 6) el.classList.add("saturday");
+
+        if (events[key] && Object.keys(events[key]).length > 0) {
+          el.classList.add("has-event");
+        }
+
+        el.textContent = i;
+        el.addEventListener("click", () => {
+          selectedDate = new Date(thisDate);
+          renderCalendar(currentCalendarDate);
+          renderSchedule(selectedDate);
+        });
+
+        calendar.appendChild(el);
+      }
+    }
+
+    function renderSchedule(date) {
+      const key = date.toISOString().split("T")[0];
+      selectedDateTitle.textContent = `${key} 일정`;
+      if (!events[key]) events[key] = {};
+
+      schedule.innerHTML = "";
+      for (let hour = 0; hour < 24; hour++) {
+        const block = document.createElement("div");
+        block.className = "hour-block";
+
+        const label = document.createElement("div");
+        label.className = "hour-label";
+        label.textContent = `${hour}시`;
+
+        if (events[key][hour] && events[key][hour].trim() !== "") {
+          label.style.color = "red";
+          label.style.fontWeight = "bold";
+        }
+
+        const input = document.createElement("textarea");
+        input.className = "hour-input";
+        input.rows = 1;
+        input.placeholder = "일정 입력...";
+        input.value = events[key][hour] || "";
+
+        input.addEventListener("input", () => {
+          input.style.height = "auto";
+          input.style.height = input.scrollHeight + "px";
+
+          if (input.value.trim() === "") delete events[key][hour];
+          else events[key][hour] = input.value;
+
+         
+        });
+
+        block.appendChild(label);
+        block.appendChild(input);
+        schedule.appendChild(block);
+      }
+    }
+  </script>
+</body>
+</html>
+

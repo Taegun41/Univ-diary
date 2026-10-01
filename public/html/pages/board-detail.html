@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>게시글 상세보기</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .board-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* 1. 제목 영역 (1 비율) */
+    .board-header {
+      flex: 1;
+      background-color: #FFF8EB;
+      padding: 15px;
+      border-bottom: 2px solid #FFF8EB;
+      position: relative;
+    }
+
+    #back-button {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      background-color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #back-button:hover {
+      background-color: #d0d0d0;
+    }
+
+    /* 2. 본문 영역 (6 비율) */
+    .board-content {
+      flex: 6;
+      background-color: white;
+      padding: 20px;
+      border-bottom: 2px solid #FFF8EB;
+      overflow-y: auto;
+    }
+
+    /* 3. 댓글 전체 영역 (3 비율) */
+    .board-comment {
+    flex: 3;
+    background-color: #FFF8EB;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 15px;
+    justify-content: space-between; /* 댓글 목록 위, 입력창 아래 배치 */
+    }
+
+  #comments-list {
+    flex: 1;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+
+  #comment-form {
+    flex-shrink: 0;
+  }
+
+  .comment-input-container {
+    display: flex;
+    align-items: center; /* 수직 중앙 정렬 */
+    gap: 10px;
+  }
+
+  .comment-input-container textarea {
+    flex: 1;
+    height: 60px;
+    padding: 10px;
+    resize: none;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+
+  .comment-input-container button {
+    height: 60px;
+    padding: 0 20px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .comment-input-container button:hover {
+    background-color: #0056b3;
+  }
+
+  </style>
+</head>
+<body>
+  <div class="board-container">
+    <!--제목 -->
+    <div class="board-header">
+      <button id="back-button">← 뒤로가기</button>
+      <h1 id="title">게시글 제목</h1>
+      <p>
+        <strong>작성자:</strong> <span id="author"></span> |
+        <strong>작성일:</strong> <span id="date"></span>
+      </p>
+    </div>
+
+    <!--본문-->
+    <div class="board-content" id="content">
+      게시글 본문 내용.
+    </div>
+
+    <!-- 댓글-->
+    <div class="board-comment">
+      <div id="comments-list">
+        <!-- 댓글 목록 -->
+      </div>
+      <form id="comment-form">
+        <div class="comment-input-container">
+          <textarea id="comment" placeholder="댓글을 입력하세요" required></textarea>
+          <button type="submit">댓글 작성</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/board-detail.js"></script>
+</body>
+</html>

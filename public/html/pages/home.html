@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대학 다이어리 - 오늘의 요약</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .main-summary {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .summary-card {
+      background:  white; 
+      border: 2px solid skyblue;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .summary-card h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px;
+      color: #333;
+    }
+
+    .summary-card ul {
+      list-style: none;
+    }
+
+    .summary-card li {
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #444;
+    }
+
+    .summary-card a {
+      text-decoration: none;
+      color: #3366cc;
+    }
+
+    .summary-card a:hover {
+      text-decoration: underline;
+    }
+    #today-meal-table {
+    width: 100%;
+    text-align: center;
+    border: 1px solid #ddd; /* 전체 테두리 연한 회색 */
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+   }
+
+    #today-meal-table thead {
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ccc; /* 헤더 아래줄 */
+    }
+
+   #today-meal-table th,
+   #today-meal-table td {
+      padding: 12px;
+      border: none; /* 셀 내부 줄 없애기 */
+      font-size: 15px;
+      color: #333;
+  }
+
+  #today-meal-table tbody tr:hover {
+    background-color: #f2f2f2;
+  }
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .summary-card h2 {
+        font-size: 18px;
+      }
+
+      .summary-card li {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-summary">
+    <!-- 1. 오늘의 일정 -->
+    <div class="summary-card" id="schedule-summary">
+      <h2>오늘의 일정</h2>
+      <ul id="today-schedule-list">
+        <li>불러오는 중...</li>
+      </ul>
+    </div>
+
+    <!-- 2. 오늘의 학식 -->
+    <div class="summary-card" id="meal-summary">
+      <h2 id="meal-time-label">오늘의 학식</h2>
+      <table id="today-meal-table" border="1" style="width:100%; text-align:center;">
+        <thead>
+          <tr>
+            <th>정식</th>
+            <th>일식</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 자바스크립트로 채워질 영역 -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. 공지사항 -->
+    <div class="summary-card" id="notice-summary">
+      <h2>공지사항</h2>
+      <ul>
+        <li><a href="#">[학사] 2학기 수강신청 안내</a></li>
+        <li><a href="#">[장학] 국가장학금 2차 신청</a></li>
+        <li><a href="#">[기타] 도서관 휴관 일정</a></li>
+      </ul>
+    </div>
+  </div>
+  <script>
+    //------------------------------------------------------1.일정 가져오기 -----------------------------------------------------------
+    function getTodayDate() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    async function loadTodaySchedule() {
+      try {
+        const userRes = await fetch('/getUserInfo');
+        const userData = await userRes.json();
+        if (!userData.loggedIn) throw new Error("로그인이 필요합니다.");
+        const username = userData.username;
+
+        const scheduleRes = await fetch(`/schedule?user=${username}`);
+        if (!scheduleRes.ok) throw new Error("일정 데이터 요청 실패");
+        const scheduleData = await scheduleRes.json();
+
+        const today = getTodayDate();
+        const events = scheduleData[today] || {};
+
+        const ul = document.getElementById("today-schedule-list");
+        ul.innerHTML = "";
+
+        if (Object.keys(events).length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "오늘은 일정이 없습니다.";
+          ul.appendChild(li);
+        } else {
+          Object.entries(events).forEach(([hour, title]) => {
+            const li = document.createElement("li");
+            li.textContent = `${hour.padStart(2, "0")}:00 - ${title}`;
+            ul.appendChild(li);
+          });
+        }
+
+      } catch (err) {
+        console.error(err);
+        const ul = document.getElementById("today-schedule-list");
+        ul.innerHTML = "<li>일정 로딩 실패</li>";
+      }
+    }
+
+    window.onload = loadTodaySchedule;
+    //--------------------------------------------------------------------------------------------------
+    //------------------------------------2.학식 가져오기------------------------------------------------
+    function getMealTime() {
+      const hour = new Date().getHours();
+      if (hour < 8) return "조식";
+      if (hour < 14) return "중식";
+      return "석식";
+    }
+
+    async function loadTodayMeal() {
+      try {
+        const res = await fetch('/app/meal'); // 금정회관 기본값이므로 building 생략
+        if (!res.ok) throw new Error("학식 요청 실패");
+
+        const data = await res.json();
+        const mealTime = getMealTime();
+        const meal = data[mealTime];
+
+        const tbody = document.querySelector('#today-meal-table tbody');
+        tbody.innerHTML = '';
+
+        const tr = document.createElement('tr');
+        const regular = meal?.['정식'] || '메뉴 없음';
+        const japanese = meal?.['일식'] || '메뉴 없음';
+
+        tr.innerHTML = `<td>${regular}</td><td>${japanese}</td>`;
+        tbody.appendChild(tr);
+
+        document.getElementById('meal-time-label').textContent = `오늘의 ${mealTime}`;
+      } catch (error) {
+        console.error('학식 로딩 오류:', error);
+        const tbody = document.querySelector('#today-meal-table tbody');
+        tbody.innerHTML = '<tr><td colspan="2">학식 정보를 불러오지 못했습니다.</td></tr>';
+      }
+    }
+//-------------------------------------------------------------------------------------------------------
+//------------------------------------------------공지사항------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  fetch('/api/alerts')
+    .then(res => res.json())
+    .then(data => {
+      const ul = document.querySelector('#notice-summary ul');
+      ul.innerHTML = ''; // 기존 더미 삭제
+
+      if (!data || data.length === 0) {
+        ul.innerHTML = '<li>공지사항이 없습니다.</li>';
+        return;
+      }
+
+      data.forEach(item => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = item.link || '#';
+        a.textContent = item.title;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    })
+    .catch(err => {
+      console.error('공지사항 불러오기 실패:', err);
+    });
+});
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTodayMeal(); // 페이지 로드 시 자동 실행
+  });
+  </script>
+</body>
+</html>

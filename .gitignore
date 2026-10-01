@@ -1,0 +1,10 @@
+# 의존성 (npm install로 다시 설치)
+node_modules/
+
+# 비밀 키 (절대 올리지 않기)
+.env
+
+# 기타
+*.log
+.DS_Store
+Thumbs.db

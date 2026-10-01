@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>음식점 지도</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; font-family: sans-serif; }
+
+    #container {
+      width: 100%;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 2fr 3fr 2fr;
+      grid-template-areas: "left map right";
+    }
+
+    #left-panel {
+      grid-area: left;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      border-right: 1px solid #ddd;
+      background: #f9f9f9;
+      overflow-y: auto;
+    }
+
+    #map {
+      grid-area: map;
+      width: 100%;
+      height: 100%;
+    }
+
+    #right-panel {
+      grid-area: right;
+      padding: 10px;
+      border-left: 1px solid #ddd;
+      background: #fafafa;
+      overflow-y: auto;
+    }
+
+    #left-top h3, #left-top h4 { margin-bottom: 10px; }
+
+    .category-btn {
+      margin: 5px 5px 10px 0;
+      padding: 6px 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .result-item button {
+        display: inline-block;
+        background: gold;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-left: 10px;
+        }
+    .category-btn:hover { background-color: #45a049; }
+
+    #category-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    #category-select {
+      display: none;
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    #detail-input {
+      width: calc(100% - 90px);
+      padding: 8px;
+      margin-top: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    #detail-search-btn {
+      padding: 8px 14px;
+      margin-left: 6px;
+      margin-top: 5px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #detail-search-btn:hover { background-color: #1976D2; }
+
+    #left-bottom {
+      margin-top: 15px;
+      background: #f1f1f1;
+      padding: 10px;
+    }
+
+    .result-item {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    .result-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* 모바일 반응형 처리 */
+    @media (max-width: 768px) {
+      #container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        grid-template-areas:
+          "left"
+          "map"
+          "right";
+        height: auto;
+      }
+
+      #left-panel, #right-panel {
+        height: auto;
+        border: none;
+      }
+
+      #map {
+        height: 300px;
+      }
+    }
+  </style>
+  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7b4daf775cc34b440df26f3af3cf2e70&libraries=services"></script>
+</head>
+<body>
+  <div id="container">
+    <section id="left-panel">
+      <div id="left-top">
+        <h3 id="category-title" data-default="카테고리 선택" data-tablet="카테고리">🍽️ 카테고리 선택</h3>
+        <div id="category-buttons">
+          <button class="category-btn" data-category="한식">한식</button>
+          <button class="category-btn" data-category="중식">중식</button>
+          <button class="category-btn" data-category="일식">일식</button>
+          <button class="category-btn" data-category="양식">양식</button>
+          <button class="category-btn" data-category="아시아음식">아시아음식</button>
+        </div>
+        <select id="category-select">
+          <option value="">카테고리 선택</option>
+          <option value="한식">한식</option>
+          <option value="중식">중식</option>
+          <option value="일식">일식</option>
+          <option value="양식">양식</option>
+          <option value="아시아음식">아시아음식</option>
+        </select>
+        <hr style="margin: 10px 0;" />
+        <h4 id="detail-title" data-default="세부 음식 검색" data-tablet="세부음식">🔍 세부 음식 검색</h4>
+        <input type="text" id="detail-input" placeholder="예: 감자탕, 파스타" autofocus/>
+        <button id="detail-search-btn">검색</button>
+      </div>
+      <div id="left-bottom">👇 즐겨찾기 (준비중)</div>
+    </section>
+    <section id="map"></section>
+    <aside id="right-panel">📋 오른쪽 목록 패널</aside>
+  </div>
+
+  <script>
+    let map;
+    let markers = [];
+    favoriteRender()
+
+    window.addEventListener('click', () => {
+      document.getElementById('detail-input').focus();
+    });
+    window.onload = function () {
+      const mapContainer = document.getElementById('map');
+      const mapOption = {
+        center: new kakao.maps.LatLng(35.232242, 129.083431),
+        level: 4
+      };
+      map = new kakao.maps.Map(mapContainer, mapOption);
+
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const category = btn.dataset.category;
+          searchPlaces(category + ' 맛집');
+        });
+      });
+
+      document.getElementById('category-select').addEventListener('change', (e) => {
+        const category = e.target.value;
+        if (category) searchPlaces(category + ' 맛집');
+      });
+
+      document.getElementById('detail-search-btn').addEventListener('click', () => {
+        const keyword = document.getElementById('detail-input').value.trim();
+        if (keyword) searchPlaces(keyword + ' 맛집');
+      });
+
+      document.getElementById('detail-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const keyword = e.target.value.trim();
+          if (keyword) searchPlaces(keyword + ' 맛집');
+        }
+      });
+
+      adjustTitlesForTablet();
+    };
+
+    function clearMarkers() {
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
+    }
+
+    function searchPlaces(keyword) {
+        const ps = new kakao.maps.services.Places();
+        const bounds = map.getBounds();
+        const rectangle = new kakao.maps.LatLngBounds(bounds.getSouthWest(), bounds.getNorthEast());
+
+        ps.keywordSearch(keyword, (data, status) => {  //api 호출
+            if (status === kakao.maps.services.Status.OK) {
+            clearMarkers();
+            const panel = document.getElementById('right-panel');
+            panel.innerHTML = '📋 검색 결과 목록';
+
+            data.forEach((place, index) => {
+                const latlng = new kakao.maps.LatLng(place.y, place.x);
+                const marker = new kakao.maps.Marker({ map, position: latlng });
+                markers.push(marker);
+
+                // 음식점 항목 div
+                const item = document.createElement('div');
+                item.className = 'result-item';
+
+                // 음식점 이름 텍스트
+                const name = document.createElement('span');
+                name.textContent = `${place.place_name} (${place.road_address_name || place.address_name})`;
+
+                // 즐겨찾기 추가 버튼
+                const addBtn = document.createElement('button');
+                addBtn.textContent = '⭐';
+                addBtn.style.marginLeft = '10px';
+                addBtn.style.padding = '4px 8px';
+                addBtn.style.fontSize = '12px';
+                addBtn.style.cursor = 'pointer';
+
+                // 클릭 시 즐겨찾기 등록 (아직 실제 저장 기능은 없음)
+                addBtn.addEventListener('click', () => {
+                    const storeName = place.place_name;
+
+                    fetch('/favorite/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ storeName })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            addBtn.style.color = 'gold';
+                        } else {
+                            alert(data.error || '즐겨찾기 추가 실패');
+                        }
+                    });
+                    favoriteRender()
+                });
+                window.addEventListener("resize", adjustTitlesForTablet);
+
+                // 마커 클릭 시 지도 이동
+                item.addEventListener('click', () => {
+                map.setCenter(latlng);
+                map.setLevel(3);
+                kakao.maps.event.trigger(marker, 'click');
+                });
+
+                item.appendChild(name);
+                item.appendChild(addBtn);
+                panel.appendChild(item);
+            });
+            }
+        }, { bounds: rectangle });
+        }
+
+
+    function adjustTitlesForTablet() {
+      const isTablet = window.innerWidth <= 768;
+      const categoryTitle = document.getElementById("category-title");
+      const detailTitle = document.getElementById("detail-title");
+
+      if (isTablet) {
+        categoryTitle.innerText = categoryTitle.dataset.tablet;
+        detailTitle.innerText = detailTitle.dataset.tablet;
+      } else {
+        categoryTitle.innerText = categoryTitle.dataset.default;
+        detailTitle.innerText = detailTitle.dataset.default;
+      }
+    }
+    //즐겨찾기 리스트 가져오기 
+    function favoriteRender() {
+        fetch('/favorite/list')
+            .then(res => res.json())
+            .then(data => {
+            const favBox = document.getElementById('left-bottom');
+            favBox.innerHTML = '<h4>⭐ 즐겨찾기 목록</h4>';
+
+            if (data.length === 0) {
+                favBox.innerHTML += '<p>등록된 즐겨찾기가 없습니다.</p>';
+                return;
+            }
+
+            data.forEach((store, index) => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.style.display = 'flex';
+                item.style.alignItems = 'center'; 
+
+                const name = document.createElement('span');
+                name.textContent = store;
+
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '❌';
+                delBtn.style.marginLeft = 'auto';
+                delBtn.style.fontSize = '12px';
+                delBtn.style.cursor = 'pointer';
+
+                delBtn.addEventListener('click', () => {
+                if (!confirm(`${store}을(를) 삭제하시겠습니까?`)) return;
+
+                fetch('/favorite/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ storeName: store })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                    alert('삭제되었습니다.');
+                    favoriteRender(); // 삭제 후 다시 렌더링
+                    } else {
+                    alert(result.error || '삭제 실패');
+                    }
+                });
+                });
+
+                item.appendChild(name);
+                item.appendChild(delBtn);
+                favBox.appendChild(item);
+            });
+            });
+        }
+        window.addEventListener('DOMContentLoaded', favoriteRender);
+  </script>
+</body>
+</html>

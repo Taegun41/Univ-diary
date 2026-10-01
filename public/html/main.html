@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대학 다이어리 - 메인</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <!--구글 폰트 링크-->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  
+</head>
+
+<body>
+  <div class="container">
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="header-left">대학 다이어리</div>
+      <div class="header-right">
+        <!-- <img src="/img/user.jpg" class="profile-img" id="profile-img" alt="프로필"> -->
+        <span class="username" id="nickname">닉네임</span>
+        <form action="/logout" method="POST">
+          <button class="logout-btn">로그아웃</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <div class="page-wrapper">
+      <div class="box left">
+        <nav class="nav">
+          <a href="/html/pages/home.html" target="main-frame">홈</a>
+          <a href="/html/pages/map.html" target="main-frame">MAP</a> 
+          <a href="/html/pages/info.html" target="main-frame">정보</a>
+          <a href="/html/pages/todo.html" target="main-frame">일정표</a>
+          <a href="/html/pages/board.html" target="main-frame">게시판</a>
+        </nav>
+      </div>
+
+      <div class="box center">
+        <iframe name="main-frame" src="/html/pages/home.html" class="main-iframe"></iframe>
+      </div>
+
+      
+    </div>
+  </div>
+
+  <!-- 모바일용 하단 탭 네비게이션 -->
+  <div class="mobile-nav">
+    <a href="/html/pages/home.html" target="main-frame">🏠</a>
+    <a href="/html/pages/map.html" target="main-frame">
+      <img src="/img/map.png" style="width: 20px; height: 20px; vertical-align: middle;">
+    </a>
+    <a href="/html/pages/info.html" target="main-frame">ℹ️</a>
+    <a href="/html/pages/todo.html" target="main-frame">
+      <img src="/img/calendar.png" style="width: 20px; height: 20px; vertical-align: middle;">
+    </a>
+    <a href="/html/pages/board.html" target="main-frame">
+      <img src="/img/board.png" style="width: 20px; height: 20px; vertical-align: middle;">
+    </a>
+  </div>
+  
+  
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    fetch('/getUserInfo')
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn) {
+          document.getElementById('nickname').textContent = data.nickname;
+          // 필요 시 프로필 이미지도 설정 가능:
+          // document.getElementById('profile-img').src = data.profileImg;
+        } else {
+          document.getElementById('nickname').textContent = '비로그인';
+        }
+      })
+      .catch(err => {
+        console.error('유저 정보 불러오기 실패:', err);
+        document.getElementById('nickname').textContent = '오류';
+      });
+  });
+  </script>
+
+</body>
+
+</html>

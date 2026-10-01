@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대학 다이어리 - 로그인</title>
+  <link rel="stylesheet" href="/css/auth.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="image-section">
+      <!-- <img src="/img/img.jpg" alt="부산대학교" /> -->
+    </div>
+    <div class="form-section">
+      <h2>대학 다이어리 로그인</h2>
+      <form action="/login" method="POST">
+        <input type="text" name="username" placeholder="아이디" required autofocus>
+        <input type="password" name="password" placeholder="비밀번호" required>
+        <button type="submit">로그인</button>
+      </form>
+
+      <!-- 회원가입 버튼: register.html로 이동 -->
+      <button onclick="location.href='/html/register.html'" class="signup-button">
+        회원가입
+      </button>
+    </div>
+  </div>
+</body>
+</html>

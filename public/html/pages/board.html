@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .board{
+            display: flex;
+            flex-direction: column;
+            position: absolute ;
+            top: 5px; bottom: 5px; left: 5px; right: 5px;
+            border: 3px solid antiquewhite;
+            border-radius: 15px;
+        }
+        .board-top {
+            flex: 0 0 auto;
+            padding: 20px;
+            background-color: white; /* 전체 배경 흰색 */
+            border-radius: 15px;
+        }
+
+        .board-title {
+            display: inline-block;
+            font-size: 2rem;
+            font-weight: bold;
+            background-image: url('/img/calendr_.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            color: black;
+            font-family: 'Arial', sans-serif;
+        }
+        .board-mid{
+            flex : 7;
+            background-color: white;
+        }
+        .board-btm {
+            display: flex;
+            justify-content: space-between;  /* 양쪽 정렬 */
+            align-items: center;
+            padding: 20px;
+            background-color: antiquewhite;
+        }
+
+        .page-control {
+            display: flex;
+            justify-content: center; /* 가운데 정렬 */
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .write-btn-wrapper {
+            flex: 0 0 auto;
+        }
+        button{
+            border-radius: 10px;
+            background-color: white;
+            border: 1px solid white;
+        }
+
+        .arrow-btn {
+            width: 24px;    /* 버튼 이미지 크기 */
+            height: 24px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .post-item {
+            flex: 1 1 10%;           
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin: 4px 0;
+            margin-right: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .post-item:hover {
+            background-color: #f5f5f5;
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .post-title {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .post-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="board">
+        <div class="board-top"><span class="board-title">게시판</span></div>
+        <div class="board-mid">
+            <ul id = "board-list"></ul>
+        </div>
+        <div class="board-btm">
+            <div class="page-control">
+                <img src="/img/left-arrow.png" alt="이전" class="arrow-btn" id="prev-btn">
+                <span id="page-num">1</span>
+                <img src="/img/right-arrow.png" alt="다음" class="arrow-btn" id="next-btn">
+            </div>
+            <div class="write-btn-wrapper">
+                <button onclick="location.href = '/html/pages/board-write.html'">글 작성</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //초기 실행 코드
+        (async function init() {
+            await fetchCurrentUser();  // 사용자 이름 먼저 가져오기
+            await loadPosts();         // 게시글 로드
+        })();
+
+        let posts=[];
+        let currentPage = 1;
+        const maxPage = 10;
+        let currentUser = '';
+
+        async function fetchCurrentUser() {
+            const res = await fetch('/user-info');
+            const data = await res.json();
+            if (data.loggedIn) {
+                currentUser = data.username;
+            } else {
+                currentUser = '';
+            }
+        }
+
+        async function loadPosts() {
+            const res = await fetch('/app/board');
+            posts = await res.json() //json 파일을 받아와서 저장
+            renderPage(currentPage);
+        }
+        //삭제 함수
+        async function deletePost(id) {
+            const res = await fetch(`/app/board/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                alert('삭제되었습니다.');
+                loadPosts(); // 새로고침
+            } else {
+                alert('삭제에 실패했습니다.');
+            }
+        }
+
+        function renderPage(page) {
+            const list = document.getElementById("board-list");
+            list.innerHTML = ""; //초기화  중복 방지
+            //10개 단위로 잘라서 로드드
+            const start = (page-1) * maxPage;
+            const end = start + maxPage;
+            const pagePosts = posts.slice(start,end);
+            
+            //forEach -> 반복해서 생성성
+            pagePosts.forEach(post => {
+                const li = document.createElement("li");
+                li.classList.add('post-item');
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.classList.add('post-header');
+
+                const titleDiv = document.createElement('div');
+                titleDiv.classList.add('post-title');
+                titleDiv.textContent = post.title;
+
+                const metaDiv = document.createElement('div');
+                metaDiv.style.display = 'flex';
+                metaDiv.style.alignItems = 'center';
+                metaDiv.style.gap = '8px';
+
+                const dateDiv = document.createElement('div');
+                dateDiv.classList.add('post-date');
+                dateDiv.textContent = post.createdAt;
+                metaDiv.appendChild(dateDiv);
+
+                if (post.author === currentUser) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '삭제';
+                    deleteBtn.style.backgroundColor = 'red';
+                    deleteBtn.style.color = 'white';
+                    deleteBtn.style.border = 'none';
+                    deleteBtn.style.borderRadius = '4px';
+                    deleteBtn.style.padding = '4px 8px';
+                    deleteBtn.style.cursor = 'pointer';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (confirm('정말 삭제하시겠습니까?')) {
+                            deletePost(post.id);
+                        }
+                    };
+                    metaDiv.appendChild(deleteBtn);
+                }
+
+            headerDiv.appendChild(titleDiv);
+            headerDiv.appendChild(metaDiv);
+
+            li.appendChild(headerDiv);
+            li.onclick = () => {
+                window.location.href = `/html/pages/board-detail.html?id=${post.id}`;
+            };
+
+            list.appendChild(li);
+        });
+
+            document.getElementById("page-num").innerHTML = page;
+
+        }
+
+        document.getElementById('prev-btn').onclick = () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+            }
+            };
+
+        document.getElementById('next-btn').onclick = () => {
+            if (currentPage < Math.ceil(posts.length / maxPage)) {
+                currentPage++;
+                renderPage(currentPage);
+            }
+            };
+
+        loadPosts();      
+    </script>
+</body>
+</html>

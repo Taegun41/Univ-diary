@@ -1,0 +1,91 @@
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #f9f9f9;
+  padding: 20px;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.6rem;
+}
+
+label, select {
+  font-size: 1rem;
+  margin-right: 10px;
+}
+
+#mealTable {
+  width: 90%;           
+  height: 40vh;            
+  margin: 20px auto;
+  border-collapse: collapse;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  font-size: 1rem;
+  overflow: hidden;
+  table-layout: fixed;       
+}
+
+#mealTable thead th {
+  padding: 12px;
+  text-align: center;
+  background-color: #fdf6e3;
+  color: #333;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+#mealTable tbody tr {
+  background-color: #ffffff;
+}
+
+#mealTable td,
+#mealTable th {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  word-wrap: break-word;       
+}
+.Academic-name{
+    text-align: center;
+}
+.Academic-calender{
+    border-radius: 15px;
+    font-family: 'Noto Sans KR', sans-serif;
+    height: 20vh;
+    display: flex;
+}
+.day{
+    border-radius: 15px;
+    border-right: 1px solid black;
+    flex : 1;
+    padding-right : 15px;
+}
+.schedule {
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 8px;
+  padding: 10px;
+  flex: 9;
+  background: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.schedule div {
+  margin-bottom: 5px;
+}
+#date-month{
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 50%;
+}
+#date-year{
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 60%;
+}
